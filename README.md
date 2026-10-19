@@ -1,6 +1,6 @@
 # idontwantnoneofthat.lol
 
-A bilingual (English / Tiếng Việt) relationship-advice blog. Built with [Astro](https://astro.build), hosted free on Cloudflare Pages, edited through Pages CMS.
+A bilingual (English / Tiếng Việt) relationship-advice blog. Built with [Astro](https://astro.build), hosted free on Cloudflare, edited through Pages CMS.
 
 ## Writing a post
 
@@ -47,11 +47,9 @@ Your post here. Use `## ` for subheadings and `> ` for a big pull quote.
 
 ## Deploying (one-time setup)
 
-1. **Cloudflare Pages:** dashboard → Workers & Pages → Create → Pages → *Connect to Git* → this repo.
-   Framework preset **Astro**, build command `npm run build`, output directory `dist`.
-   The Node version comes from `.node-version`.
-2. **Domain:** add `idontwantnoneofthat.lol` as a site in Cloudflare, then at Name.com replace the nameservers with the two Cloudflare shows. Back in the Pages project → Custom domains → add `idontwantnoneofthat.lol` and `www.idontwantnoneofthat.lol`. HTTPS is automatic.
-3. **Analytics (optional):** Pages project → Metrics → enable Web Analytics.
+1. **Cloudflare:** Workers & Pages → Create → import this repo. Build command `npm run build`, deploy command `npx wrangler deploy`. The deploy settings (serve `dist/` as a static site) live in `wrangler.jsonc`, and the Node version comes from `.node-version`. Every push to `main` redeploys.
+2. **Domain:** add `idontwantnoneofthat.lol` as a site in Cloudflare, then at Name.com replace the nameservers with the two Cloudflare shows. Back in the project → Domains → add `idontwantnoneofthat.lol` and `www.idontwantnoneofthat.lol`. HTTPS is automatic.
+3. **Analytics (optional):** project → Metrics → enable Web Analytics.
 
 ## Running it on a computer
 
