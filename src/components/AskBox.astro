@@ -1,0 +1,102 @@
+---
+import { type Lang, t, page } from '../i18n';
+import { SITE } from '../site';
+
+interface Props {
+  lang: Lang;
+  full?: boolean; // true on the /ask page: shows the form itself
+}
+const { lang, full = false } = Astro.props;
+const s = t(lang);
+const tally = SITE.tallyFormId
+  ? `https://tally.so/embed/${SITE.tallyFormId}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1`
+  : '';
+---
+
+<section id="ask" class="ask" aria-labelledby="ask-h">
+  <div class="intro">
+    <h2 id="ask-h" class="display">{s.askTitle} <em>{s.askEm}</em></h2>
+    <p>{s.askBody}</p>
+    <p class="meta">{s.askBoth}</p>
+  </div>
+  <div class="form">
+    {
+      full && tally ? (
+        <>
+          <iframe
+            data-tally-src={tally}
+            loading="lazy"
+            width="100%"
+            height="420"
+            frameborder="0"
+            title={s.navAsk}
+          />
+          <script is:inline src="https://tally.so/widgets/embed.js" async />
+          <script is:inline>
+            {`document.addEventListener('DOMContentLoaded',function(){if(window.Tally)Tally.loadEmbeds();else document.querySelectorAll('iframe[data-tally-src]').forEach(function(e){e.src=e.dataset.tallySrc;});});`}
+          </script>
+        </>
+      ) : full ? (
+        <p class="placeholder">{s.askPlaceholder}</p>
+      ) : (
+        <a class="btn btn--lip" href={page(lang, 'ask')}>{s.askCta}</a>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .ask {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    padding: 48px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 32px 48px;
+    margin: 32px 0 40px;
+  }
+  .intro {
+    flex: 999 1 420px;
+  }
+  .form {
+    flex: 1 1 260px;
+  }
+  .ask h2 {
+    font-size: 42px;
+    margin: 0;
+  }
+  .ask h2 em {
+    font-style: italic;
+    color: var(--lip);
+  }
+  .intro p {
+    margin: 16px 0 0;
+    color: var(--muted);
+    font-size: 17px;
+  }
+  .intro .meta {
+    margin-top: 10px;
+  }
+  .btn {
+    width: 100%;
+  }
+  .placeholder {
+    margin: 0;
+    padding: 24px;
+    border: 1px dashed var(--line);
+    border-radius: 16px;
+    font-family: var(--sans);
+    color: var(--muted);
+    text-align: center;
+  }
+  @media (max-width: 640px) {
+    .ask {
+      padding: 28px 22px;
+    }
+    .ask h2 {
+      font-size: 32px;
+    }
+  }
+</style>

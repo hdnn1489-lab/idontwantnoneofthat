@@ -1,0 +1,293 @@
+---
+import Base from '../layouts/Base.astro';
+import PostCard from './PostCard.astro';
+import AskBox from './AskBox.astro';
+import { type Lang, t, other, home } from '../i18n';
+import { getPosts, dedupeForLang, findTranslation, postLang, postUrl, readingTime } from '../lib/posts';
+import { SERIES, type SeriesKey } from '../data/taxonomy';
+import { getEntry } from 'astro:content';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const all = await getPosts();
+const feed = dedupeForLang(all, lang);
+const featured = feed.find((p) => p.data.featured) ?? feed[0];
+const rest = feed.filter((p) => p !== featured);
+const featuredAuthors = featured
+  ? (await Promise.all(featured.data.authors.map((a) => getEntry('authors', a)))).filter(Boolean)
+  : [];
+---
+
+<Base lang={lang} altUrl={home(other(lang))}>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">{s.tagline}</p>
+        <h1 class="display">{s.heroLead} <em>{s.heroEm}</em> {s.heroTail}</h1>
+        <p class="lead">{s.heroBody}</p>
+      </div>
+      <div class="hero-cta">
+        <a class="btn btn--lip" href="#latest">{s.readLatest}</a>
+        <a class="btn btn--ghost" href="#ask">{s.askCta}</a>
+      </div>
+    </section>
+
+    {
+      featured && (
+        <section id="latest" class="featured" aria-labelledby="featured-h" lang={postLang(featured)}>
+          <a class="art" href={postUrl(featured)} tabindex="-1" aria-hidden="true">
+            {featured.data.cover ? (
+              <img src={featured.data.cover} alt="" loading="eager" />
+            ) : (
+              <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 1 1 12 6a5 5 0 1 1 7.5 6.6z" /><path d="M4 4l16 16" /></svg>
+            )}
+          </a>
+          <div class="featured-text">
+            <div class="card-top">
+              {featured.data.series && (
+                <span class={`pill pill--${featured.data.series}`} lang="en">
+                  {SERIES[featured.data.series as SeriesKey][lang]}
+                </span>
+              )}
+              <span class="meta" lang="en">
+                {findTranslation(featured, all) ? 'EN / VI' : postLang(featured).toUpperCase()}
+              </span>
+            </div>
+            <h2 id="featured-h" class="display">
+              <a href={postUrl(featured)}>{featured.data.title}</a>
+            </h2>
+            <p class="lead">{featured.data.description}</p>
+            <div class="featured-foot">
+              <span class="meta" lang={lang}>
+                {featuredAuthors.map((a) => a!.data.name).join(` ${s.and} `)} · {readingTime(featured)} {s.minRead}
+              </span>
+              <a class="read" href={postUrl(featured)} lang={lang}>{s.readIt}</a>
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <section class="recent" aria-labelledby="recent-h">
+      <div class="recent-head">
+        <h2 id="recent-h" class="display">{s.recent}</h2>
+        <div class="filters" role="group" aria-label={lang === 'vi' ? 'Lọc bài' : 'Filter posts'}>
+          <button type="button" aria-pressed="true" data-filter="all">{s.all}</button>
+          <button type="button" aria-pressed="false" data-filter="series:none-of-that" lang="en">None of that</button>
+          <button type="button" aria-pressed="false" data-filter="series:some-of-this" lang="en">Some of this</button>
+          <button type="button" aria-pressed="false" data-filter="lang:en">EN</button>
+          <button type="button" aria-pressed="false" data-filter="lang:vi">VI</button>
+        </div>
+      </div>
+      {
+        rest.length ? (
+          <div class="grid" data-feed>
+            {rest.map((p) => (
+              <PostCard post={p} lang={lang} hasTranslation={!!findTranslation(p, all)} />
+            ))}
+          </div>
+        ) : (
+          <p class="muted sans">{s.noPosts}</p>
+        )
+      }
+      <p class="muted sans empty" hidden data-empty>{s.noPosts}</p>
+    </section>
+
+    <AskBox lang={lang} />
+  </div>
+</Base>
+
+<script is:inline>
+  // On the English homepage, send readers who chose Vietnamese (or whose phone is set to it) to /vi/.
+  (function () {
+    if (location.pathname !== '/') return;
+    try {
+      var pref = localStorage.getItem('lang');
+      if (!pref && (navigator.language || '').toLowerCase().indexOf('vi') === 0) pref = 'vi';
+      if (pref === 'vi' && !/[?&]stay/.test(location.search)) location.replace('/vi/' + location.hash);
+    } catch (e) {}
+  })();
+</script>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-filter]');
+  const cards = document.querySelectorAll<HTMLElement>('[data-feed] .card');
+  const empty = document.querySelector<HTMLElement>('[data-empty]');
+  buttons.forEach((btn) =>
+    btn.addEventListener('click', () => {
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      const [kind, value] = (btn.dataset.filter ?? 'all').split(':');
+      let shown = 0;
+      cards.forEach((card) => {
+        const match =
+          kind === 'all' ||
+          (kind === 'series' && card.dataset.series === value) ||
+          (kind === 'lang' && (card.dataset.lang ?? '').split(' ').includes(value));
+        card.hidden = !match;
+        if (match) shown++;
+      });
+      if (empty) empty.hidden = shown > 0 || cards.length === 0;
+    }),
+  );
+</script>
+
+<style>
+  .hero {
+    padding: 88px 0 72px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 40px 48px;
+  }
+  .hero-text {
+    flex: 999 1 560px;
+    min-width: 0;
+  }
+  .hero .eyebrow {
+    margin: 0 0 20px;
+  }
+  .hero h1 {
+    font-size: clamp(52px, 8vw, 88px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin: 0;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--lip);
+  }
+  .lead {
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 24px 0 0;
+    max-width: 600px;
+  }
+  .hero-cta {
+    flex: 1 1 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .featured {
+    border-top: 1px solid var(--line);
+    padding: 56px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 40px 48px;
+    scroll-margin-top: 20px;
+  }
+  .art {
+    flex: 1 1 380px;
+    min-height: 340px;
+    background: var(--surface);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--lip);
+    overflow: hidden;
+  }
+  .art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .featured-text {
+    flex: 999 1 440px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .featured h2 {
+    font-size: clamp(34px, 4.5vw, 48px);
+    margin: 0;
+  }
+  .featured h2 a {
+    text-decoration: none;
+  }
+  .featured h2 a:hover {
+    color: var(--lip);
+  }
+  .featured .lead {
+    margin: 0;
+    font-size: 19px;
+  }
+  .featured-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .read {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--lip);
+    text-decoration: none;
+    padding: 10px 0;
+  }
+  .recent {
+    padding: 8px 0 40px;
+  }
+  .recent-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .recent-head h2 {
+    font-size: 32px;
+    margin: 0;
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .filters button {
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .filters button:hover {
+    border-color: var(--ink);
+  }
+  .filters button[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+    font-weight: 500;
+  }
+  .empty {
+    margin-top: 12px;
+  }
+  @media (max-width: 640px) {
+    .hero {
+      padding: 48px 0 48px;
+    }
+    .lead {
+      font-size: 18px;
+    }
+    .art {
+      min-height: 220px;
+    }
+    .featured {
+      padding: 40px 0;
+    }
+  }
+</style>

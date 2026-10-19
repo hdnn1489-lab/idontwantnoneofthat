@@ -1,0 +1,88 @@
+# Pages CMS (https://app.pagescms.org): a simple editor for writing posts
+# without touching code. Log in with GitHub and open this repository.
+
+media:
+  input: public/images/uploads
+  output: /images/uploads
+
+content:
+  - name: posts-en
+    label: Posts (English)
+    type: collection
+    path: src/content/posts/en
+    filename: "{primary}.md"
+    view:
+      primary: title
+      fields: [title, date, series, draft]
+      sort: date
+      order: desc
+    fields: &postFields
+      - { name: title, label: Title, type: string, required: true }
+      - { name: description, label: Short description (shown on cards and in link previews), type: text, required: true }
+      - { name: date, label: Date, type: date, required: true }
+      - name: series
+        label: Series
+        type: select
+        options:
+          values: [none-of-that, some-of-this]
+      - name: tags
+        label: Topics
+        type: select
+        options:
+          multiple: true
+          values: [dating, situationships, breakups, communication, boundaries, self-respect, family, friendship, grief-and-loss]
+      - name: authors
+        label: Written by
+        type: select
+        default: [you]
+        options:
+          multiple: true
+          values: [you, co-author]
+      - name: illustrator
+        label: Illustration by
+        type: select
+        options:
+          values: [you, co-author]
+      - { name: translationKey, label: Translation key (give a post and its translation the same word to link them), type: string }
+      - { name: contentNote, label: Content note for heavy topics (e.g. grief), type: string }
+      - { name: quote, label: Standout line for the Instagram story card, type: text }
+      - { name: cover, label: Header illustration, type: image }
+      - { name: coverAlt, label: Describe the illustration (for screen readers), type: string }
+      - name: furtherReading
+        label: Further reading
+        type: object
+        list: true
+        fields:
+          - { name: title, label: Title, type: string }
+          - { name: author, label: Author, type: string }
+          - { name: url, label: Link, type: string }
+      - { name: featured, label: Feature on the homepage, type: boolean, default: false }
+      - { name: draft, label: Draft (hidden from the site), type: boolean, default: true }
+      - { name: body, label: Post, type: rich-text, options: { format: markdown } }
+
+  - name: posts-vi
+    label: Bài viết (Tiếng Việt)
+    type: collection
+    path: src/content/posts/vi
+    filename: "{primary}.md"
+    view:
+      primary: title
+      fields: [title, date, series, draft]
+      sort: date
+      order: desc
+    fields: *postFields
+
+  - name: authors
+    label: Authors
+    type: collection
+    path: src/content/authors
+    format: json
+    fields:
+      - { name: name, label: Name, type: string, required: true }
+      - { name: initial, label: Initial (for the avatar), type: string, required: true }
+      - name: bio
+        label: Bio
+        type: object
+        fields:
+          - { name: en, label: English, type: text }
+          - { name: vi, label: Tiếng Việt, type: text }

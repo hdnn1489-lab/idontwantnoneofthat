@@ -1,0 +1,41 @@
+---
+// Simple text page wrapper (about, support).
+import Base from '../layouts/Base.astro';
+import type { Lang } from '../i18n';
+interface Props {
+  lang: Lang;
+  title: string;
+  eyebrow?: string;
+  description?: string;
+  altUrl: string;
+}
+const { lang, title, eyebrow, description, altUrl } = Astro.props;
+---
+
+<Base lang={lang} title={title} description={description} altUrl={altUrl}>
+  <div class="wrap">
+    <header class="head">
+      {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+      <h1 class="display">{title}</h1>
+    </header>
+    <div class="prose page"><slot /></div>
+  </div>
+</Base>
+
+<style>
+  .head {
+    max-width: var(--read);
+    margin: 0 auto;
+    padding: 72px 0 32px;
+  }
+  .head .eyebrow {
+    margin: 0 0 14px;
+  }
+  .head h1 {
+    font-size: clamp(42px, 7vw, 68px);
+    margin: 0;
+  }
+  .page {
+    padding-bottom: 48px;
+  }
+</style>

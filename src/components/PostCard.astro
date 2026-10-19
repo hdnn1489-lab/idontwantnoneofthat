@@ -1,0 +1,31 @@
+---
+import { type Post, postLang, postUrl, readingTime } from '../lib/posts';
+import { type Lang, t } from '../i18n';
+import { SERIES, type SeriesKey } from '../data/taxonomy';
+
+interface Props {
+  post: Post;
+  lang: Lang; // interface language
+  hasTranslation?: boolean;
+}
+const { post, lang, hasTranslation = false } = Astro.props;
+const pl = postLang(post);
+const d = post.data;
+const series = d.series as SeriesKey | undefined;
+---
+
+<article
+  class="card"
+  lang={pl}
+  data-series={series ?? ''}
+  data-lang={hasTranslation ? 'en vi' : pl}
+>
+  <div class="card-top">
+    {series && <span class={`pill pill--${series}`} lang="en">{SERIES[series][lang]}</span>}
+    {d.contentNote && <span class="pill pill--note" lang={lang}>{t(lang).contentNote}: {d.contentNote}</span>}
+    <span class="meta" lang="en">{hasTranslation ? 'EN / VI' : pl.toUpperCase()}</span>
+  </div>
+  <h3 class="display"><a href={postUrl(post)}>{d.title}</a></h3>
+  <p>{d.description}</p>
+  <span class="meta" lang={lang}>{readingTime(post)} {t(lang).minRead}</span>
+</article>

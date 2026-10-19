@@ -1,0 +1,7 @@
+---
+import ListPage from '../../components/ListPage.astro';
+import { SERIES_KEYS } from '../../data/taxonomy';
+export const getStaticPaths = () => SERIES_KEYS.map((series) => ({ params: { series } }));
+---
+
+<ListPage lang="en" kind="series" keyName={Astro.params.series!} />

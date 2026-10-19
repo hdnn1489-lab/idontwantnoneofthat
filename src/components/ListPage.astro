@@ -1,0 +1,66 @@
+---
+import Base from '../layouts/Base.astro';
+import PostCard from './PostCard.astro';
+import { type Lang, t, other } from '../i18n';
+import { getPosts, dedupeForLang, findTranslation } from '../lib/posts';
+import { SERIES, TAGS, type SeriesKey, type TagKey } from '../data/taxonomy';
+
+interface Props {
+  lang: Lang;
+  kind: 'series' | 'tags';
+  keyName: string;
+}
+const { lang, kind, keyName } = Astro.props;
+const s = t(lang);
+const all = await getPosts();
+const posts = dedupeForLang(all, lang).filter((p) =>
+  kind === 'series' ? p.data.series === keyName : p.data.tags.includes(keyName),
+);
+const label = kind === 'series' ? SERIES[keyName as SeriesKey][lang] : TAGS[keyName as TagKey][lang];
+const blurb = kind === 'series' ? SERIES[keyName as SeriesKey].blurb[lang] : undefined;
+const altUrl = `${other(lang) === 'vi' ? '/vi' : ''}/${kind}/${keyName}/`;
+---
+
+<Base lang={lang} title={label} description={blurb} altUrl={altUrl}>
+  <div class="wrap">
+    <header class="head">
+      <p class="eyebrow">{kind === 'series' ? s.postsIn : s.tagged}</p>
+      <h1 class="display">{label}</h1>
+      {blurb && <p class="blurb">{blurb}</p>}
+    </header>
+    {
+      posts.length ? (
+        <div class="grid">
+          {posts.map((p) => (
+            <PostCard post={p} lang={lang} hasTranslation={!!findTranslation(p, all)} />
+          ))}
+        </div>
+      ) : (
+        <p class="muted sans">{s.noPosts}</p>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .head {
+    padding: 72px 0 40px;
+    max-width: 720px;
+  }
+  .head .eyebrow {
+    margin: 0 0 14px;
+  }
+  .head h1 {
+    font-size: clamp(44px, 7vw, 72px);
+    margin: 0;
+    font-style: italic;
+  }
+  .blurb {
+    font-size: 20px;
+    color: var(--muted);
+    margin: 18px 0 0;
+  }
+  .grid {
+    margin-bottom: 40px;
+  }
+</style>

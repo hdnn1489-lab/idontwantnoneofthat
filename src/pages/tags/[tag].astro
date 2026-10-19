@@ -1,0 +1,7 @@
+---
+import ListPage from '../../components/ListPage.astro';
+import { TAG_KEYS } from '../../data/taxonomy';
+export const getStaticPaths = () => TAG_KEYS.map((tag) => ({ params: { tag } }));
+---
+
+<ListPage lang="en" kind="tags" keyName={Astro.params.tag!} />

@@ -1,0 +1,414 @@
+---
+import { render, getEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getPosts, postLang, postSlug, postUrl, findTranslation, readingTime, dedupeForLang, type Post } from '../../lib/posts';
+import { t, formatDate, page, other, type Lang } from '../../i18n';
+import { SERIES, TAGS, type SeriesKey, type TagKey } from '../../data/taxonomy';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({
+    params: { lang: postLang(post), slug: postSlug(post) },
+    props: { post, all: posts },
+  }));
+}
+
+interface Props {
+  post: Post;
+  all: Post[];
+}
+const { post, all } = Astro.props;
+const lang: Lang = postLang(post);
+const s = t(lang);
+const d = post.data;
+const { Content } = await render(post);
+const translation = findTranslation(post, all);
+const authors = (await Promise.all(d.authors.map((a) => getEntry('authors', a)))).filter(Boolean);
+const illustrator = d.illustrator ? await getEntry('authors', d.illustrator) : undefined;
+const series = d.series as SeriesKey | undefined;
+const prefix = lang === 'vi' ? '/vi' : '';
+
+// Keep reading: same series first, then newest; one card per story.
+const others = dedupeForLang(all, lang).filter((p) => p !== post && p !== translation);
+const next = [
+  ...others.filter((p) => series && p.data.series === series),
+  ...others.filter((p) => !(series && p.data.series === series)),
+].slice(0, 2);
+
+const shareImage = `/og/${lang}/${postSlug(post)}.png`;
+const storyCard = d.quote ? `/og/story/${lang}/${postSlug(post)}.png` : undefined;
+---
+
+<Base
+  lang={lang}
+  title={d.title}
+  description={d.description}
+  image={shareImage}
+  altUrl={translation ? postUrl(translation) : undefined}
+  article
+>
+  <article class="wrap">
+    <header class="post-head">
+      <div class="card-top">
+        {series && <a class={`pill pill--${series}`} href={`${prefix}/series/${series}/`} lang="en">{SERIES[series][lang]}</a>}
+        {
+          translation && (
+            <a class="translation" href={postUrl(translation)} lang={other(lang)} hreflang={other(lang)} data-set-lang={other(lang)}>
+              {s.alsoIn}
+            </a>
+          )
+        }
+      </div>
+      <h1 class="display">{d.title}</h1>
+      <p class="dek">{d.description}</p>
+      <div class="byline">
+        <div class="avatars" aria-hidden="true">
+          {authors.map((a, i) => <span class={`avatar avatar--${i % 2}`}>{a!.data.initial}</span>)}
+        </div>
+        <span class="meta">
+          {s.by} <strong>{authors.map((a) => a!.data.name).join(` ${s.and} `)}</strong>
+          {illustrator && <> · {s.illustrationBy} <strong>{illustrator.data.name}</strong></>}
+          {' · '}{readingTime(post)} {s.minRead} · <time datetime={d.date.toISOString()}>{formatDate(d.date, lang)}</time>
+        </span>
+      </div>
+    </header>
+
+    {
+      d.contentNote && (
+        <aside class="note" role="note">
+          <strong>{s.contentNote}:</strong> {d.contentNote}
+        </aside>
+      )
+    }
+
+    {
+      d.cover && (
+        <figure class="cover">
+          <img src={d.cover} alt={d.coverAlt ?? ''} loading="eager" />
+        </figure>
+      )
+    }
+
+    <div class="prose body">
+      <Content />
+    </div>
+
+    <div class="after">
+      <div class="share">
+        <button type="button" class="btn btn--lip" data-share data-title={d.title} data-copied={s.linkCopied}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"></path><path d="M16 6l-4-4-4 4"></path><path d="M12 2v13"></path></svg>
+          <span>{s.share}</span>
+        </button>
+        {storyCard && <a class="btn btn--ghost" href={storyCard} download>{s.storyCard}</a>}
+      </div>
+
+      {
+        d.tags.length > 0 && (
+          <ul class="tags" aria-label={s.topics}>
+            {d.tags.map((tag) => (
+              <li><a class="pill pill--tag" href={`${prefix}/tags/${tag}/`}>{TAGS[tag as TagKey][lang]}</a></li>
+            ))}
+          </ul>
+        )
+      }
+
+      {
+        d.furtherReading.length > 0 && (
+          <aside class="further" aria-labelledby="further-h">
+            <h2 id="further-h">{s.furtherReading}</h2>
+            <ul>
+              {d.furtherReading.map((r) => (
+                <li>
+                  {r.url ? <a href={r.url} rel="noopener">{r.title}</a> : <span>{r.title}</span>}
+                  {r.author && <span class="muted">, {r.author}</span>}
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )
+      }
+
+      <aside class="therapy">
+        {s.notTherapy} <a href={page(lang, 'support')}>{s.supportResources}</a>
+      </aside>
+
+      <section class="authors" aria-labelledby="authors-h">
+        <h2 id="authors-h">{s.whosTalking}</h2>
+        <div class="author-list">
+          {
+            [...authors, ...(illustrator && !authors.some((a) => a!.id === illustrator.id) ? [illustrator] : [])].map((a, i) => (
+              <div class="author">
+                <span class={`avatar avatar--${i % 2} big`} aria-hidden="true">{a!.data.initial}</span>
+                <div>
+                  <p class="author-name">{a!.data.name}</p>
+                  <p class="author-bio">{a!.data.bio[lang]}</p>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+    </div>
+
+    {
+      next.length > 0 && (
+        <section class="next" aria-labelledby="next-h">
+          <h2 id="next-h" class="display">{s.keepReading}</h2>
+          <div class="next-grid">
+            {next.map((p) => (
+              <a class="card" href={postUrl(p)} lang={postLang(p)}>
+                <div class="card-top">
+                  {p.data.series && (
+                    <span class={`pill pill--${p.data.series}`} lang="en">
+                      {SERIES[p.data.series as SeriesKey][lang]}
+                    </span>
+                  )}
+                  <span class="meta">{postLang(p).toUpperCase()}</span>
+                </div>
+                <span class="display next-title">{p.data.title}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </article>
+</Base>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-share]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const url = location.href;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: btn.dataset.title, url });
+        } catch (e) {}
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        const label = btn.querySelector('span');
+        if (label) {
+          const old = label.textContent;
+          label.textContent = btn.dataset.copied ?? 'Copied';
+          setTimeout(() => (label.textContent = old), 2000);
+        }
+      } catch (e) {}
+    });
+  });
+</script>
+
+<style>
+  .post-head {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 72px 0 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .translation {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--lip);
+    text-decoration: none;
+    padding: 10px 0;
+  }
+  .post-head h1 {
+    font-size: clamp(38px, 6vw, 62px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .dek {
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0;
+  }
+  .byline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+  }
+  .byline strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .avatars {
+    display: flex;
+  }
+  .avatars .avatar + .avatar {
+    margin-left: -10px;
+    border: 2px solid var(--bg);
+  }
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--sans);
+    font-weight: 600;
+    flex: none;
+  }
+  .avatar--0 {
+    background: var(--plum);
+    color: var(--bg);
+  }
+  .avatar--1 {
+    background: var(--gold-bg);
+    color: var(--gold);
+  }
+  .avatar.big {
+    width: 56px;
+    height: 56px;
+    font-size: 18px;
+  }
+  .note {
+    max-width: 780px;
+    margin: 0 auto 32px;
+    padding: 16px 22px;
+    border: 1px solid var(--plum);
+    border-radius: 16px;
+    font-family: var(--sans);
+    font-size: 15px;
+  }
+  .cover {
+    max-width: 1000px;
+    margin: 0 auto 48px;
+  }
+  .cover img {
+    width: 100%;
+    border-radius: 28px;
+  }
+  .body {
+    padding-bottom: 24px;
+  }
+  .after {
+    max-width: var(--read);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .share {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 16px;
+  }
+  .tags {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tags .pill {
+    padding: 9px 14px;
+    font-size: 13px;
+  }
+  .further {
+    background: var(--raise);
+    border-radius: 22px;
+    padding: 26px 30px;
+  }
+  .further h2,
+  .authors h2 {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--plum);
+    margin: 0 0 14px;
+  }
+  .further ul {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 17px;
+  }
+  .further a {
+    color: var(--lip);
+  }
+  .therapy {
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 20px 28px;
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+  .therapy a {
+    color: var(--lip);
+    font-weight: 600;
+  }
+  .authors {
+    padding-top: 32px;
+  }
+  .authors h2 {
+    color: var(--muted);
+  }
+  .author-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .author {
+    flex: 1 1 280px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .author p {
+    margin: 0;
+  }
+  .author-name {
+    font-family: var(--serif-display);
+    font-size: 20px;
+  }
+  .author-bio {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-top: 4px !important;
+  }
+  .next {
+    border-top: 1px solid var(--line);
+    margin-top: 64px;
+    padding: 48px 0 32px;
+  }
+  .next h2 {
+    font-size: 30px;
+    margin: 0 0 24px;
+  }
+  .next-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  .next .card {
+    text-decoration: none;
+  }
+  .next-title {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+  @media (max-width: 640px) {
+    .post-head {
+      padding: 40px 0 28px;
+    }
+    .dek {
+      font-size: 19px;
+    }
+    .share .btn {
+      flex: 1 1 auto;
+    }
+  }
+</style>

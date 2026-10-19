@@ -1,0 +1,110 @@
+---
+import '@fontsource-variable/fraunces/opsz.css';
+import '@fontsource-variable/fraunces/opsz-italic.css';
+import '@fontsource-variable/literata/opsz.css';
+import '@fontsource-variable/literata/opsz-italic.css';
+import '@fontsource/be-vietnam-pro/400.css';
+import '@fontsource/be-vietnam-pro/500.css';
+import '@fontsource/be-vietnam-pro/600.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE } from '../site';
+import { type Lang, other, home } from '../i18n';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+  image?: string;
+  altUrl?: string; // the same page in the other language, if it exists
+  article?: boolean;
+}
+
+const { lang, title, description, image = '/og/default.png', altUrl, article = false } = Astro.props;
+const fullTitle = title ? `${title} · ${SITE.name}${SITE.tld}` : `${SITE.name}${SITE.tld}`;
+const desc =
+  description ??
+  (lang === 'vi'
+    ? 'Chuyện tình cảm, nói thẳng. Tiếng Việt và English.'
+    : 'Relationship advice with boundaries. English and Tiếng Việt.');
+const canonical = new URL(Astro.url.pathname, SITE.url).href;
+const ogImage = new URL(image, SITE.url).href;
+const switchTo = altUrl ?? home(other(lang));
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${SITE.name} (EN)`} href="/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${SITE.name} (VI)`} href="/vi/rss.xml" />
+    {altUrl && <link rel="alternate" hreflang={other(lang)} href={new URL(altUrl, SITE.url).href} />}
+    <meta name="theme-color" content="#f6eff2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#241a24" media="(prefers-color-scheme: dark)" />
+
+    <meta property="og:site_name" content={`${SITE.name}${SITE.tld}`} />
+    <meta property="og:title" content={title ?? `${SITE.name}${SITE.tld}`} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:locale" content={lang === 'vi' ? 'vi_VN' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script is:inline>
+      // Apply a saved light/dark choice before the page paints.
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">{lang === 'vi' ? 'Bỏ qua đến nội dung' : 'Skip to content'}</a>
+    <Header lang={lang} switchTo={switchTo} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+    <script>
+      // Theme toggle
+      document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const root = document.documentElement;
+          const current =
+            root.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          const next = current === 'dark' ? 'light' : 'dark';
+          root.dataset.theme = next;
+          try {
+            localStorage.setItem('theme', next);
+          } catch (e) {}
+        });
+      });
+      // Remember the reader's language choice
+      document.querySelectorAll<HTMLAnchorElement>('[data-set-lang]').forEach((a) => {
+        a.addEventListener('click', () => {
+          try {
+            localStorage.setItem('lang', a.dataset.setLang!);
+          } catch (e) {}
+        });
+      });
+      // Mobile menu
+      const menuBtn = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+      const nav = document.getElementById('site-nav');
+      menuBtn?.addEventListener('click', () => {
+        const open = menuBtn.getAttribute('aria-expanded') === 'true';
+        menuBtn.setAttribute('aria-expanded', String(!open));
+        nav?.classList.toggle('is-open', !open);
+      });
+    </script>
+  </body>
+</html>

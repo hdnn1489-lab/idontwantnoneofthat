@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .bg { fill: #241a24; }
+    .mark { stroke: #ff5c93; }
+  </style>
+  <rect class="bg" width="64" height="64" rx="16"/>
+  <g class="mark" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M50 34.2 32 51.5 14 34.2a11 11 0 1 1 18-13.6 11 11 0 1 1 18 13.6z"/>
+    <path d="M14 14l36 36"/>
+  </g>
+</svg>

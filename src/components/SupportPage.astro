@@ -1,0 +1,62 @@
+---
+import Prose from './Prose.astro';
+import { type Lang, page, other } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+// Before launch: add hotlines you have personally verified (numbers change).
+---
+
+{
+  lang === 'en' ? (
+    <Prose lang="en" title="Support resources" eyebrow="You don't have to carry it alone" altUrl={page(other(lang), 'support')}>
+      <p>
+        A blog post can help you name what's happening. It can't replace a person who can actually be there. If
+        you're in danger or thinking about hurting yourself, please reach out now.
+      </p>
+      <h2>In Vietnam</h2>
+      <ul>
+        <li><strong>113</strong>: police emergency</li>
+        <li><strong>115</strong>: medical emergency</li>
+        <li><strong>111</strong>: national child protection hotline (for anyone under 16)</li>
+        <li>[Add a verified mental health or domestic violence hotline]</li>
+      </ul>
+      <h2>Anywhere else</h2>
+      <p>
+        <a href="https://findahelpline.com" rel="noopener">Find A Helpline</a> lists free, confidential crisis
+        lines by country.
+      </p>
+      <h2>Talking to someone</h2>
+      <p>
+        If things feel heavy but not urgent, a counselor or psychologist can help you sort through it. [Add
+        counseling services you trust.]
+      </p>
+    </Prose>
+  ) : (
+    <Prose lang="vi" title="Nguồn hỗ trợ" eyebrow="Bạn không phải gánh một mình" altUrl={page(other(lang), 'support')}>
+      <p>
+        Một bài viết có thể giúp bạn gọi tên điều đang xảy ra, nhưng không thể thay thế một người thật sự ở bên bạn. Nếu
+        bạn đang gặp nguy hiểm hoặc có ý nghĩ làm hại bản thân, hãy liên hệ ngay.
+      </p>
+      <h2>Tại Việt Nam</h2>
+      <ul>
+        <li><strong>113</strong>: công an</li>
+        <li><strong>115</strong>: cấp cứu y tế</li>
+        <li><strong>111</strong>: tổng đài quốc gia bảo vệ trẻ em (dưới 16 tuổi)</li>
+        <li>[Thêm đường dây nóng tâm lý hoặc bạo lực gia đình đã kiểm chứng]</li>
+      </ul>
+      <h2>Ở nước khác</h2>
+      <p>
+        <a href="https://findahelpline.com" rel="noopener">Find A Helpline</a> liệt kê các đường dây hỗ trợ miễn
+        phí, bảo mật theo từng quốc gia.
+      </p>
+      <h2>Nói chuyện với chuyên gia</h2>
+      <p>
+        Nếu mọi thứ nặng nề nhưng chưa khẩn cấp, chuyên viên tham vấn hoặc nhà tâm lý có thể giúp bạn gỡ rối. [Thêm các
+        dịch vụ tham vấn bạn tin tưởng.]
+      </p>
+    </Prose>
+  )
+}

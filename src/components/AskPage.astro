@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import AskBox from './AskBox.astro';
+import { type Lang, t, page, other } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<Base lang={lang} title={t(lang).navAsk} description={t(lang).askBody} altUrl={page(other(lang), 'ask')}>
+  <div class="wrap">
+    <AskBox lang={lang} full />
+  </div>
+</Base>

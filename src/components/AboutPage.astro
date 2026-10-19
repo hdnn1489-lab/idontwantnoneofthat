@@ -1,0 +1,54 @@
+---
+import Prose from './Prose.astro';
+import { getCollection } from 'astro:content';
+import { type Lang, page, other } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const authors = await getCollection('authors');
+---
+
+{
+  lang === 'en' ? (
+    <Prose lang="en" title="About" eyebrow="Who we are" altUrl={page(other(lang), 'about')}>
+      <p>
+        <em>I don't want none of that</em> started as a reaction to a friend's very flaky guy. It turned into a
+        place for honest, psychology-grounded takes on dating, situationships, heartbreak, and the signs we
+        talk ourselves out of.
+      </p>
+      <p>[Write a few lines in your own voice: why you started this, what readers can expect, and how often you post.]</p>
+      <h2>Who's talking</h2>
+      {authors.map((a) => (
+        <p>
+          <strong>{a.data.name}</strong>: {a.data.bio.en}
+        </p>
+      ))}
+      <h2>The fine print</h2>
+      <p>
+        This is a blog, not therapy. Stories are combined and details changed so nobody is identifiable. If
+        something you're going through feels unsafe or too heavy, please <a href="/support/">reach out for support</a>.
+      </p>
+    </Prose>
+  ) : (
+    <Prose lang="vi" title="Giới thiệu" eyebrow="Tụi mình là ai" altUrl={page(other(lang), 'about')}>
+      <p>
+        <em>I don't want none of that</em> bắt đầu từ phản ứng của mình trước một anh chàng hứa rồi lặn của cô bạn thân.
+        Giờ đây là nơi nói thẳng, có cơ sở tâm lý học, về hẹn hò, mập mờ, chia tay, và những dấu hiệu mình hay tự bỏ qua.
+      </p>
+      <p>[Viết vài dòng bằng giọng của bạn: vì sao bắt đầu, người đọc sẽ nhận được gì, và bao lâu đăng bài một lần.]</p>
+      <h2>Người viết</h2>
+      {authors.map((a) => (
+        <p>
+          <strong>{a.data.name}</strong>: {a.data.bio.vi}
+        </p>
+      ))}
+      <h2>Lưu ý nhỏ</h2>
+      <p>
+        Đây là blog, không phải trị liệu. Các câu chuyện được ghép lại và thay đổi chi tiết để không ai bị nhận ra. Nếu
+        điều bạn đang trải qua khiến bạn thấy không an toàn hoặc quá nặng nề, hãy <a href="/vi/support/">tìm sự hỗ trợ</a>.
+      </p>
+    </Prose>
+  )
+}
