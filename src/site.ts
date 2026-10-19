@@ -5,7 +5,7 @@ export const SITE = {
   url: 'https://idontwantnoneofthat.lol',
 
   // Instagram handle without the @. Leave empty to hide the link.
-  instagram: '',
+  instagram: 'al.cerene',
 
   // Tally form ID for the anonymous question box (the part after tally.so/r/).
   // Leave empty until the form exists; the page shows a placeholder instead.
