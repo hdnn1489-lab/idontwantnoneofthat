@@ -18,6 +18,16 @@ export const SERIES = {
       vi: 'Dấu hiệu tốt, và một mối quan hệ lành mạnh thực sự trông như thế nào.',
     },
   },
+  // Adult fiction. Kept out of the homepage, topic pages, RSS and search engines,
+  // and shown behind an 18+ confirmation.
+  r18: {
+    en: 'R18',
+    vi: 'R18',
+    blurb: {
+      en: 'Fiction for adults. 18+ only.',
+      vi: 'Truyện dành cho người lớn. Chỉ dành cho người từ 18 tuổi.',
+    },
+  },
 } as const;
 
 export const TAGS = {

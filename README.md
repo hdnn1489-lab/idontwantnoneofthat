@@ -26,6 +26,7 @@ draft: false
 Your post here. Use `## ` for subheadings and `> ` for a big pull quote.
 ```
 
+- **R18 posts** (`series: r18`) only appear on the R18 page, behind an 18+ confirmation. They're left out of the homepage, topic pages, RSS feeds, the sitemap and search engines, and their link previews never show the title.
 - **Translations are optional.** Give both versions the same `translationKey` and each shows a link to the other.
 - **Topics** are listed in `src/data/taxonomy.ts` with an English and Vietnamese label. Add new ones there (and in `.pages.yml`).
 - **Share images** are generated automatically for every post. Posts with a `quote` also get a 1080×1350 story card, downloadable from the post page.

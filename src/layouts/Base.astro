@@ -19,9 +19,10 @@ interface Props {
   image?: string;
   altUrl?: string; // the same page in the other language, if it exists
   article?: boolean;
+  noindex?: boolean;
 }
 
-const { lang, title, description, image = '/og/default.png', altUrl, article = false } = Astro.props;
+const { lang, title, description, image = '/og/default.png', altUrl, article = false, noindex = false } = Astro.props;
 const fullTitle = title ? `${title} · ${SITE.name}${SITE.tld}` : `${SITE.name}${SITE.tld}`;
 const desc =
   description ??
@@ -31,6 +32,9 @@ const desc =
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
 const ogImage = new URL(image, SITE.url).href;
 const switchTo = altUrl ?? home(other(lang));
+// R18 pages: link previews show only the series name, never the title or description.
+const shareTitle = noindex ? `R18 · ${SITE.name}${SITE.tld}` : (title ?? `${SITE.name}${SITE.tld}`);
+const shareDesc = noindex ? (lang === 'vi' ? 'Chỉ dành cho người từ 18 tuổi.' : 'For adults only.') : desc;
 ---
 
 <!doctype html>
@@ -39,8 +43,9 @@ const switchTo = altUrl ?? home(other(lang));
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
-    <meta name="description" content={desc} />
+    <meta name="description" content={shareDesc} />
     <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="alternate" type="application/rss+xml" title={`${SITE.name} (EN)`} href="/rss.xml" />
@@ -50,8 +55,8 @@ const switchTo = altUrl ?? home(other(lang));
     <meta name="theme-color" content="#241a24" media="(prefers-color-scheme: dark)" />
 
     <meta property="og:site_name" content={`${SITE.name}${SITE.tld}`} />
-    <meta property="og:title" content={title ?? `${SITE.name}${SITE.tld}`} />
-    <meta property="og:description" content={desc} />
+    <meta property="og:title" content={shareTitle} />
+    <meta property="og:description" content={shareDesc} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
@@ -65,6 +70,7 @@ const switchTo = altUrl ?? home(other(lang));
       try {
         var t = localStorage.getItem('theme');
         if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        if (localStorage.getItem('age-ok') === '1') document.documentElement.dataset.ageOk = '';
       } catch (e) {}
     </script>
   </head>

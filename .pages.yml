@@ -24,7 +24,7 @@ content:
         label: Series
         type: select
         options:
-          values: [none-of-that, some-of-this]
+          values: [none-of-that, some-of-this, r18]
       - name: tags
         label: Topics
         type: select

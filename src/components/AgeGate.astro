@@ -1,0 +1,81 @@
+---
+// 18+ confirmation shown over R18 pages. Remembered on this device once confirmed.
+import { type Lang, home } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const vi = lang === 'vi';
+---
+
+<div class="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-h">
+  <div class="box">
+    <span class="pill pill--r18">R18</span>
+    <h2 id="age-h" class="display">{vi ? 'Chỉ dành cho người lớn' : 'Adults only'}</h2>
+    <p>
+      {
+        vi
+          ? 'Phần này có truyện với nội dung tình dục, dành cho người từ 18 tuổi trở lên.'
+          : 'This section has fiction with sexual content, meant for readers 18 and over.'
+      }
+    </p>
+    <div class="actions">
+      <button type="button" class="btn btn--lip" data-age-ok>{vi ? 'Tôi đủ 18 tuổi' : "I'm 18 or older"}</button>
+      <a class="btn btn--ghost" href={home(lang)}>{vi ? 'Quay lại' : 'Take me back'}</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelector('[data-age-ok]')?.addEventListener('click', () => {
+    try {
+      localStorage.setItem('age-ok', '1');
+    } catch (e) {}
+    document.documentElement.dataset.ageOk = '';
+  });
+</script>
+
+<style>
+  .age-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  :global(html[data-age-ok]) .age-gate {
+    display: none;
+  }
+  .box {
+    max-width: 460px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    padding: 40px 32px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  h2 {
+    font-size: 36px;
+    margin: 0;
+  }
+  p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 17px;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+</style>

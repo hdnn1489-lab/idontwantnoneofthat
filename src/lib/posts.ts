@@ -5,6 +5,8 @@ export type Post = CollectionEntry<'posts'>;
 
 export const postLang = (p: Post): Lang => (p.id.startsWith('vi/') ? 'vi' : 'en');
 export const postSlug = (p: Post) => p.id.split('/').slice(1).join('/');
+export const isAdult = (p: Post) => p.data.series === 'r18';
+export const sfw = (ps: Post[]) => ps.filter((p) => !isAdult(p));
 export const postUrl = (p: Post) => `/${postLang(p)}/${postSlug(p)}/`;
 
 export function readingTime(p: Post) {

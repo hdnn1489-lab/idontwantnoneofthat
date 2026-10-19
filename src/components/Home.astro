@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import PostCard from './PostCard.astro';
 import AskBox from './AskBox.astro';
 import { type Lang, t, other, home } from '../i18n';
-import { getPosts, dedupeForLang, findTranslation, postLang, postUrl, readingTime } from '../lib/posts';
+import { getPosts, sfw, dedupeForLang, findTranslation, postLang, postUrl, readingTime } from '../lib/posts';
 import { SERIES, type SeriesKey } from '../data/taxonomy';
 import { getEntry } from 'astro:content';
 
@@ -13,7 +13,7 @@ interface Props {
 const { lang } = Astro.props;
 const s = t(lang);
 const all = await getPosts();
-const feed = dedupeForLang(all, lang);
+const feed = sfw(dedupeForLang(all, lang));
 const featured = feed.find((p) => p.data.featured) ?? feed[0];
 const rest = feed.filter((p) => p !== featured);
 const featuredAuthors = featured
